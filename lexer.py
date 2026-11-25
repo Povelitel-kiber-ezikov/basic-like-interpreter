@@ -46,19 +46,23 @@ class Lexer:
     }
 
     def __init__(self, source: str):
+        # Сохраняет текст и задаёт начальную позицию
         self.source = source.replace("\r\n", "\n").replace("\r", "\n")
         self.position = 0
         self.line = 1
 
     @staticmethod
     def is_letter(char: str) -> bool:
+        # Проверяет, является ли символ латинской буквой
         return "A" <= char <= "Z" or "a" <= char <= "z"
 
     @staticmethod
     def is_digit(char: str) -> bool:
+        # Проверяет, является ли символ цифрой
         return "0" <= char <= "9"
 
     def read_word(self) -> Token:
+        # Читает ключевое слово или идентификатор
         start = self.position
         start_line = self.line
 
@@ -90,6 +94,7 @@ class Lexer:
         )
 
     def read_number(self) -> Token:
+        # Читает целое или вещественное число
         start = self.position
         start_line = self.line
 
@@ -138,6 +143,7 @@ class Lexer:
         )
 
     def tokenize(self) -> list[Token]:
+        # Разбивает исходный текст на список токенов
         tokens = []
 
         while self.position < len(self.source):
@@ -207,14 +213,3 @@ class Lexer:
         ))
 
         return tokens
-
-
-if __name__ == "__main__":
-    source = """DIM x AS INTEGER
-x = 12 + 3
-PRINT x"""
-
-    lexer = Lexer(source)
-
-    for token in lexer.tokenize():
-        print(token)
