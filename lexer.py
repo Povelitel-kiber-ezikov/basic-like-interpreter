@@ -71,6 +71,54 @@ class Lexer:
             line=start_line,
         )
 
+    def read_number(self) -> Token:
+        start = self.position
+        start_line = self.line
+
+        if (
+            self.position >= len(self.source)
+            or not self.is_digit(self.source[self.position])
+        ):
+            raise ValueError("Число должно начинаться с цифры")
+
+        while (
+            self.position < len(self.source)
+            and self.is_digit(self.source[self.position])
+        ):
+            self.position += 1
+
+        kind = "INTEGER_NUMBER"
+
+        if (
+            self.position < len(self.source)
+            and self.source[self.position] == "."
+        ):
+            self.position += 1
+
+            if (
+                self.position >= len(self.source)
+                or not self.is_digit(self.source[self.position])
+            ):
+                raise ValueError(
+                    f"Строка {start_line}: после точки должна быть цифра"
+                )
+
+            while (
+                self.position < len(self.source)
+                and self.is_digit(self.source[self.position])
+            ):
+                self.position += 1
+
+            kind = "FLOAT_NUMBER"
+
+        text = self.source[start:self.position]
+
+        return Token(
+            kind=kind,
+            text=text,
+            line=start_line,
+        )
+
     def tokenize(self) -> list[Token]:
         tokens = []
 
@@ -99,6 +147,9 @@ class Lexer:
 
             elif self.is_letter(char):
                 tokens.append(self.read_word())
+
+            elif self.is_digit(char):
+                tokens.append(self.read_number())
 
             else:
                 raise ValueError(
