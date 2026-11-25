@@ -27,6 +27,24 @@ class Lexer:
         "NOT",
     }
 
+    SINGLE_CHAR_TOKENS = {
+        "+": "PLUS",
+        "-": "MINUS",
+        "*": "MULTIPLY",
+        "/": "DIVIDE",
+        "=": "EQUAL",
+        ">": "GREATER",
+        "<": "LESS",
+        "(": "LEFT_PAREN",
+        ")": "RIGHT_PAREN",
+    }
+
+    TWO_CHAR_TOKENS = {
+        ">=": "GREATER_EQUAL",
+        "<=": "LESS_EQUAL",
+        "<>": "NOT_EQUAL",
+    }
+
     def __init__(self, source: str):
         self.source = source.replace("\r\n", "\n").replace("\r", "\n")
         self.position = 0
@@ -124,6 +142,7 @@ class Lexer:
 
         while self.position < len(self.source):
             char = self.source[self.position]
+            two_chars = self.source[self.position:self.position + 2]
 
             if char == " " or char == "\t":
                 self.position += 1
@@ -151,10 +170,27 @@ class Lexer:
             elif self.is_digit(char):
                 tokens.append(self.read_number())
 
+            elif two_chars in self.TWO_CHAR_TOKENS:
+                tokens.append(Token(
+                    kind=self.TWO_CHAR_TOKENS[two_chars],
+                    text=two_chars,
+                    line=self.line,
+                ))
+
+                self.position += 2
+
+            elif char in self.SINGLE_CHAR_TOKENS:
+                tokens.append(Token(
+                    kind=self.SINGLE_CHAR_TOKENS[char],
+                    text=char,
+                    line=self.line,
+                ))
+
+                self.position += 1
+
             else:
                 raise ValueError(
-                    f"Строка {self.line}: "
-                    f"символ {char!r} пока не поддерживается"
+                    f"Строка {self.line}: недопустимый символ {char!r}"
                 )
 
         if tokens and tokens[-1].kind != "NEWLINE":
@@ -171,3 +207,14 @@ class Lexer:
         ))
 
         return tokens
+
+
+if __name__ == "__main__":
+    source = """DIM x AS INTEGER
+x = 12 + 3
+PRINT x"""
+
+    lexer = Lexer(source)
+
+    for token in lexer.tokenize():
+        print(token)
