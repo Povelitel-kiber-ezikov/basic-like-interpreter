@@ -3,7 +3,6 @@ from dataclasses import dataclass
 
 @dataclass
 class Token:
-    
     kind: str
     text: str
     line: int
@@ -29,7 +28,7 @@ class Lexer:
     }
 
     def __init__(self, source: str):
-        self.source = source
+        self.source = source.replace("\r\n", "\n").replace("\r", "\n")
         self.position = 0
         self.line = 1
 
@@ -42,8 +41,6 @@ class Lexer:
         return "0" <= char <= "9"
 
     def read_word(self) -> Token:
-        """Прочитать ключевое слово или имя переменной."""
-
         start = self.position
         start_line = self.line
 
@@ -73,3 +70,53 @@ class Lexer:
             text=text,
             line=start_line,
         )
+
+    def tokenize(self) -> list[Token]:
+        tokens = []
+
+        while self.position < len(self.source):
+            char = self.source[self.position]
+
+            if char == " " or char == "\t":
+                self.position += 1
+
+            elif char == "\n":
+                tokens.append(Token(
+                    kind="NEWLINE",
+                    text="\n",
+                    line=self.line,
+                ))
+
+                self.position += 1
+                self.line += 1
+
+            elif char == "'":
+                while (
+                    self.position < len(self.source)
+                    and self.source[self.position] != "\n"
+                ):
+                    self.position += 1
+
+            elif self.is_letter(char):
+                tokens.append(self.read_word())
+
+            else:
+                raise ValueError(
+                    f"Строка {self.line}: "
+                    f"символ {char!r} пока не поддерживается"
+                )
+
+        if tokens and tokens[-1].kind != "NEWLINE":
+            tokens.append(Token(
+                kind="NEWLINE",
+                text="\n",
+                line=self.line,
+            ))
+
+        tokens.append(Token(
+            kind="EOF",
+            text="",
+            line=self.line,
+        ))
+
+        return tokens
